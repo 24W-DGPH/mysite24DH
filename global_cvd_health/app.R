@@ -148,7 +148,12 @@ ui <- dashboardPage(
     fluidRow(
       box(title = "Cholesterol Frequency", width = 5, plotlyOutput("cholesterol_hist")),
       box(title = "Physical Activity and Sleep vs Age", width = 7, plotlyOutput("scatter_plot"))
+    ),
+    fluidRow(
+      box(title = "Population with Previous CVD", width = 5,
+          plotlyOutput("heart_problems_pie"))
     )
+    
   )
 )
 
@@ -262,6 +267,42 @@ server <- function(input, output) {
     
     ggplotly(p) %>% layout(legend = list(title = list(text = "Activity Type")))
   })
+  
+  
+  # Previous Heart Problems Pie Chart
+  output$heart_problems_pie <- renderPlotly({
+    data <- filtered_data()
+    
+    # Create a summary table
+    heart_problem_counts <- table(data$previous_heart_problems)
+    
+    # Ensure there is data before plotting
+    if (length(heart_problem_counts) == 0) {
+      return(NULL)
+    }
+    
+    # Convert to a dataframe for plotting
+    heart_df <- as.data.frame(heart_problem_counts)
+    colnames(heart_df) <- c("Heart Problem", "Count")
+    
+    # Label mapping for clarity
+    heart_df$`Heart Problem` <- factor(heart_df$`Heart Problem`,
+                                       levels = c(0, 1),
+                                       labels = c("No Heart Problem", "Had Heart Problem"))
+    
+    # Create Pie Chart
+    plot_ly(
+      heart_df,
+      labels = ~`Heart Problem`,
+      values = ~Count,
+      type = "pie",
+      textinfo = "label+percent",
+      insidetextfont = list(color = "#FFFFFF"),
+      marker = list(colors = c("#e886f7", "#8ff783")) 
+    ) %>%
+      layout()
+  })
+  
   
 }
 
